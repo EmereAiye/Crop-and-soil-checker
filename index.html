@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crop and Soil Doctor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div class="sky" id="sky" aria-hidden="true"></div>
+
+<a class="skip" href="#scan">Skip to the scanner</a>
+
+<header class="top">
+  <a class="brand" href="#top" aria-label="Crop and Soil Doctor home">
+    <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+      <path d="M16 3C24 8 27 18 16 29 5 18 8 8 16 3Z" fill="currentColor"/>
+      <path d="M16 8V27M16 15l-5-3M16 20l6-4" stroke="#f7f9ef" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+    </svg>
+    Crop &amp; Soil Doctor
+  </a>
+  <nav aria-label="Main">
+    <a href="#scan">Scan</a>
+    <a href="#weather">Weather</a>
+    <a href="#symptoms">Symptom guide</a>
+    <a href="#news">News</a>
+    <a href="#history">My scans</a>
+    <a href="#diary">Crop diary</a>
+  </nav>
+  <a class="wx-chip" id="wxChip" href="#weather" hidden></a>
+  <div class="account" id="account"></div>
+</header>
+
+<main id="top">
+
+  <section class="hero" id="scan">
+    <div class="hero-copy">
+      <h1>Show us the leaf or the soil. We'll tell you what's wrong.</h1>
+      <p class="lead">
+        Take a close photo of one affected leaf or a patch of bare ground. Crop &amp; Soil Doctor
+        looks for disease, nutrient trouble and soil problems, then gives you a plan you can start today.
+      </p>
+      <ul class="tips">
+        <li>Fill the frame with a single leaf, or a patch of bare soil</li>
+        <li>For soil, dig a small hole and photograph the fresh side</li>
+        <li>Use daylight, not flash</li>
+        <li>Keep fingers out of the picture</li>
+      </ul>
+    </div>
+
+    <div class="sheet" id="stage" data-state="idle" data-kind="">
+      <div class="sheet-head">
+        <span class="tag" id="stageTag">Specimen</span>
+        <p id="status" role="status">Waiting for a leaf or soil photo</p>
+      </div>
+
+      <div class="modes" id="modes" role="radiogroup" aria-label="What are you scanning?">
+        <button type="button" class="mode" role="radio" aria-checked="true" data-mode="auto">Auto</button>
+        <button type="button" class="mode" role="radio" aria-checked="false" data-mode="crop">Crop leaf</button>
+        <button type="button" class="mode" role="radio" aria-checked="false" data-mode="soil">Soil</button>
+      </div>
+
+      <div class="viewport">
+
+        <div class="view v-idle">
+          <div class="idle-art" aria-hidden="true">
+            <svg viewBox="0 0 200 200" class="leaf-art">
+              <path class="leaf-body" d="M100 8C168 40 190 112 100 192 10 112 32 40 100 8Z"/>
+              <path class="leaf-vein" d="M100 20V190M100 60L66 42M100 90L58 68M100 122L64 98M100 60l34-18M100 90l42-22M100 122l36-24"/>
+            </svg>
+            <svg viewBox="0 0 200 200" class="soil-art">
+              <path d="M20 140 Q 100 100 180 140 L 180 180 L 20 180 Z" fill="#7a4a2b"/>
+              <path d="M30 155 Q 100 120 170 155 L 170 180 L 30 180 Z" fill="#5c351c"/>
+              <path d="M45 120 Q 100 80 155 120 Z" fill="#a66133"/>
+              <path d="M70 95 Q 100 60 130 95 Z" fill="#d49b6a"/>
+            </svg>
+            <div class="idle-beam"></div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn primary" id="openCamera">Open camera</button>
+            <button type="button" class="btn ghost" id="pickFile">Upload a photo</button>
+          </div>
+          <p class="drop-hint">You can also drop an image anywhere on this card.</p>
+        </div>
+
+        <div class="view v-camera">
+          <div class="cam-wrap">
+            <video id="video" playsinline muted></video>
+            <div class="reticle" aria-hidden="true"></div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn primary" id="snap">Snap photo</button>
+            <button type="button" class="btn ghost" id="closeCamera">Cancel</button>
+          </div>
+        </div>
+
+        <div class="view v-scan">
+          <div class="frame" id="frame">
+            <img id="preview" alt="The photo you provided">
+            <div class="grid-lines" aria-hidden="true"></div>
+            <div class="beam" aria-hidden="true"></div>
+            <div id="markers"></div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn ghost" id="again">Scan another</button>
+          </div>
+        </div>
+
+        <div class="view v-reject">
+          <img id="rejectThumb" alt="The photo that could not be read">
+          <div class="reject-text">
+            <h2 id="rejectTitle"></h2>
+            <p id="rejectMsg"></p>
+            <p id="rejectTip" class="reject-tip"></p>
+            <button type="button" class="btn primary" id="tryAgain">Try another photo</button>
+          </div>
+        </div>
+
+      </div>
+
+      <input type="file" id="fileInput" accept="image/*" hidden>
+      <input type="file" id="captureInput" accept="image/*" capture="environment" hidden>
+    </div>
+  </section>
+
+  <section class="results" id="results" tabindex="-1" aria-live="polite" hidden></section>
+
+  <section class="weather" id="weather">
+    <div class="section-head">
+      <h2>Field weather</h2>
+      <p id="wxPlace">See what the sky means for your crops and soil.</p>
+    </div>
+    <form class="wx-form" id="wxForm" novalidate>
+      <input type="text" id="wxTown" placeholder="Type your town, e.g. Ibadan" autocomplete="off" aria-label="Town">
+      <button type="submit" class="btn primary small">Search</button>
+      <button type="button" class="btn ghost small" id="wxGps">Use my location</button>
+    </form>
+    <p class="wx-msg" id="wxMsg" role="status"></p>
+    <div id="wxBody"></div>
+  </section>
+
+  <section class="symptoms" id="symptoms">
+    <div class="section-head">
+      <h2>No photo? Start from what you see.</h2>
+      <p>Pick a symptom to read the usual causes and what to do about them.</p>
+    </div>
+    <div class="tabs" id="guideTabs" role="tablist" aria-label="Problem type">
+      <button type="button" class="tab" role="tab" aria-selected="true" data-group="crop">Crop problems</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-group="soil">Soil problems</button>
+    </div>
+    <div class="chips" id="symptomChips" role="group" aria-label="Symptoms"></div>
+    <div class="symptom-detail" id="symptomDetail" aria-live="polite">
+      <p class="placeholder">Choose a symptom above.</p>
+    </div>
+  </section>
+
+  <section class="news" id="news">
+    <div class="section-head">
+      <h2>Farm news</h2>
+      <p>Stories for farmers from news sources around the web.</p>
+    </div>
+    <div class="tabs" id="newsTabs" role="tablist" aria-label="News topic">
+      <button type="button" class="tab" role="tab" aria-selected="true" data-topic="latest">Latest</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-topic="weather">Weather &amp; climate</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-topic="markets">Prices &amp; markets</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-topic="tips">Tips</button>
+    </div>
+    <div id="newsBody"></div>
+  </section>
+
+  <section class="history" id="history">
+    <div class="section-head">
+      <h2>My scans</h2>
+      <p id="historySub"></p>
+    </div>
+    <div id="historyBody"></div>
+  </section>
+
+  <section class="diary" id="diary">
+    <div class="section-head">
+      <h2>Crop diary</h2>
+      <p>Log each crop from planting to harvest. Saved on this device with your free account.</p>
+    </div>
+    <div id="diaryBody"></div>
+  </section>
+
+  <section class="how" id="how">
+    <div class="section-head">
+      <h2>How a photo becomes a diagnosis</h2>
+    </div>
+    <ol class="steps-flow">
+      <li>
+        <h3>Check what it is</h3>
+        <p>Leaf or soil is detected automatically. Hands, walls, sky and dark or blank photos are turned away with a tip.</p>
+      </li>
+      <li>
+        <h3>Read the colours</h3>
+        <p>Green, yellow, brown, red, grey and white areas are measured and the problem spots are marked on your photo.</p>
+      </li>
+      <li>
+        <h3>Match to known problems</h3>
+        <p>The pattern is compared with common crop diseases and soil conditions, and you get causes, steps and prevention.</p>
+      </li>
+    </ol>
+    <p class="honesty">
+      Analysis runs in your browser, so your photo stays on your device. It reads colour and
+      pattern, so it is a first guess, not a lab test. Soil colour cannot show pH or nutrient
+      levels, and many diseases look alike, so confirm with your local agricultural extension
+      officer before spraying or applying lime or fertiliser.
+    </p>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>Crop &amp; Soil Doctor &middot; Built for farmers who want answers in the field.</p>
+</footer>
+
+<div class="overlay" id="authOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <button type="button" class="close" id="authClose" aria-label="Close">&times;</button>
+
+    <h2 id="authTitle">Create your free account</h2>
+    <p class="reason" id="authReason" hidden></p>
+
+    <ul class="perks">
+      <li>Unlimited scans</li>
+      <li>Full treatment plans and prevention tips</li>
+      <li>Every scan saved in My scans</li>
+    </ul>
+
+    <div class="auth-tabs" id="authTabs" role="tablist">
+      <button type="button" class="auth-tab" role="tab" aria-selected="true" data-tab="signup">Create account</button>
+      <button type="button" class="auth-tab" role="tab" aria-selected="false" data-tab="signin">Sign in</button>
+    </div>
+
+    <form id="authForm" data-mode="signup" novalidate>
+      <label class="field signup-only">
+        <span>Your name</span>
+        <input type="text" id="fName" autocomplete="name" placeholder="Ada Okafor">
+      </label>
+
+      <label class="field">
+        <span>Email</span>
+        <input type="email" id="fEmail" autocomplete="email" inputmode="email" placeholder="you@example.com">
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <input type="password" id="fPass" autocomplete="new-password" placeholder="At least 8 characters, letters and numbers">
+      </label>
+
+      <label class="field signup-only">
+        <span>Confirm password</span>
+        <input type="password" id="fConfirm" autocomplete="new-password" placeholder="Type it again">
+      </label>
+
+      <button type="button" class="link-btn" id="togglePass">Show password</button>
+
+      <p class="auth-error" id="authError" role="alert"></p>
+
+      <button type="submit" class="btn primary wide" id="fSubmit">Create account</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="./script.js"></script>
+</body>
+</html>
+
